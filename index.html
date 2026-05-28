@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Online placement test angličtiny s automatickým vyhodnocením a exportem do PDF." />
+  <title>Placement Test Angličtiny</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --soft: #edf4f7;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #d7dee8;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --advanced: #7c3aed;
+      --advanced-soft: #ede9fe;
+      --ok: #15803d;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --radius: 8px;
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #101827;
+      --surface: #172033;
+      --soft: #202b40;
+      --text: #eef4ff;
+      --muted: #aebbd0;
+      --border: #344157;
+      --accent: #2dd4bf;
+      --accent-strong: #5eead4;
+      --advanced: #c4b5fd;
+      --advanced-soft: #30234f;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --bad: #f87171;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(15, 118, 110, 0.12), transparent 34rem),
+        radial-gradient(circle at 90% 8%, rgba(124, 58, 237, 0.12), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    button, input { font: inherit; }
+
+    .shell {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    .topbar, .brand, .result-head, .question-meta, .progress-label {
+      display: flex;
+      gap: 14px;
+    }
+
+    .topbar {
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      align-items: center;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: white;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 4px;
+      font-size: clamp(1.35rem, 3vw, 2.2rem);
+      line-height: 1.1;
+    }
+
+    .brand p, .helper, .small, footer { color: var(--muted); }
+
+    .theme-button {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .panel, .question, .result, .actions {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .intro { padding: clamp(20px, 4vw, 34px); }
+
+    .eyebrow {
+      display: inline-flex;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+      color: var(--accent-strong);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .intro h2 {
+      max-width: 760px;
+      font-size: clamp(2rem, 6vw, 4rem);
+      line-height: 1;
+      letter-spacing: 0;
+      margin-bottom: 16px;
+    }
+
+    .intro p { max-width: 760px; color: var(--muted); font-size: 1.06rem; }
+
+    .stats, .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .stat, .scorebox {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--soft);
+    }
+
+    .stat strong { display: block; font-size: 1.35rem; line-height: 1.1; }
+    .stat span, .scorebox span { color: var(--muted); font-size: 0.88rem; }
+
+    .student { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    label, .question-title { font-weight: 800; }
+
+    input[type="text"] {
+      width: 100%;
+      margin-top: 8px;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .progress-label { justify-content: space-between; margin-bottom: 8px; color: var(--muted); }
+    .progress { height: 10px; border-radius: 999px; background: var(--soft); overflow: hidden; border: 1px solid var(--border); }
+    .progress span { display: block; width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--advanced)); transition: width 180ms ease; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .section-heading {
+      margin: 8px 0 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .questions { display: grid; gap: 12px; }
+    .question { padding: 18px; scroll-margin-top: 18px; }
+
+    .question-meta { justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .answer {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .answer:hover { border-color: var(--accent); }
+    .answer input { width: 18px; height: 18px; accent-color: var(--accent); flex: 0 0 auto; }
+
+    .actions {
+      position: sticky;
+      top: 18px;
+      padding: 16px;
+    }
+
+    .button {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .primary { background: var(--accent); color: white; }
+    .primary:hover { background: var(--accent-strong); }
+    .secondary { background: var(--soft); color: var(--text); border-color: var(--border); }
+
+    .result {
+      display: none;
+      margin: 18px 0;
+      padding: 22px;
+      border-left: 7px solid var(--accent);
+    }
+
+    .result.ok { border-left-color: var(--ok); }
+    .result.warn { border-left-color: var(--warn); }
+    .result.bad { border-left-color: var(--bad); }
+
+    .result-head { justify-content: space-between; align-items: flex-start; }
+    .result-head h2 { font-size: clamp(1.5rem, 4vw, 2.2rem); margin-bottom: 6px; }
+
+    .score-ring {
+      display: grid;
+      place-items: center;
+      width: 118px;
+      height: 118px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) var(--score-angle), var(--soft) 0);
+      flex: 0 0 auto;
+    }
+
+    .score-ring div {
+      display: grid;
+      place-items: center;
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: var(--surface);
+      font-weight: 900;
+      font-size: 1.35rem;
+    }
+
+    .score-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 16px 0; }
+    .scorebox strong { display: block; margin-bottom: 5px; }
+    .missing { color: var(--bad); font-weight: 800; }
+    footer { text-align: center; font-size: 0.88rem; padding-top: 24px; }
+
+    @media (max-width: 880px) {
+      .hero, .layout { grid-template-columns: 1fr; }
+      .actions { position: static; }
+      .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 20px, 1160px); padding-top: 14px; }
+      .topbar { align-items: flex-start; }
+      .brand p { font-size: 0.9rem; }
+      .stats, .answers, .score-grid { grid-template-columns: 1fr; }
+      .question-meta, .result-head { display: block; }
+      .score-ring { margin-top: 12px; }
+    }
+
+    @media print {
+      :root, [data-theme="dark"] {
+        --bg: #ffffff; --surface: #ffffff; --soft: #f4f6f8; --text: #111827; --muted: #4b5563; --border: #d1d5db; --shadow: none;
+      }
+      body { background: white; }
+      .topbar, .hero, .layout, footer { display: none; }
+      .shell { width: 100%; padding: 0; }
+      .result { display: block !important; box-shadow: none; border-radius: 0; border-top: 0; border-right: 0; border-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar" aria-label="Horní lišta">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">EN</div>
+        <div>
+          <h1>Placement Test Angličtiny</h1>
+          <p>Online test pro rozřazení studentů střední školy</p>
+        </div>
+      </div>
+      <button class="theme-button" type="button" id="themeToggle" aria-label="Přepnout světlý a tmavý režim" title="Přepnout režim">
+        <span id="themeIcon" aria-hidden="true">☾</span>
+      </button>
+    </nav>
+
+    <section class="hero" aria-label="Úvod testu">
+      <div class="panel intro">
+        <p class="eyebrow">Automatické vyhodnocení</p>
+        <h2>Rychlé a přehledné rozřazení podle výsledku v testu.</h2>
+        <p>Test obsahuje 60 hodnocených otázek. Po vyhodnocení se zobrazí bodové skóre, procenta úspěšnosti, doporučená interpretace a splnění kritérií pro vyšší skupinu i B1+/B2.</p>
+        <div class="stats" aria-label="Parametry testu">
+          <div class="stat"><strong>60</strong><span>hodnocených otázek</span></div>
+          <div class="stat"><strong>60</strong><span>stejně zobrazených položek</span></div>
+          <div class="stat"><strong>PDF</strong><span>export výsledku</span></div>
+        </div>
+      </div>
+
+      <aside class="panel student">
+        <label for="studentName">Jméno a příjmení studenta
+          <input id="studentName" type="text" autocomplete="name" placeholder="Např. Anna Nováková" />
+        </label>
+        <p class="helper">Jméno slouží pouze pro výsledek a export. Odpovědi se neodesílají na server.</p>
+        <div>
+          <div class="progress-label"><span>Vyplněno</span><strong id="progressText">0 / 60</strong></div>
+          <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section id="result" class="result" aria-live="polite"></section>
+
+    <section class="layout">
+      <div>
+        <p class="section-heading">Otázky</p>
+        <form id="testForm" class="questions"></form>
+      </div>
+
+      <aside class="actions" aria-label="Akce testu">
+        <h3>Vyhodnocení</h3>
+        <button class="button primary" type="button" id="evaluateButton">Vyhodnotit test</button>
+        <button class="button secondary" type="button" id="pdfButton">Exportovat PDF</button>
+        <button class="button secondary" type="button" id="resetButton">Vymazat odpovědi</button>
+        <p class="helper">PDF exportuje poslední zobrazený výsledek. V prohlížeči stačí zvolit Uložit jako PDF.</p>
+      </aside>
+    </section>
+
+    <footer>Kritéria a otázky lze upravit přímo v části CONFIG a QUESTIONS ve zdrojovém souboru.</footer>
+  </main>
+
+  <script>
+    const CONFIG = {
+      maxScore: 60,
+      submitUrl: "",
+      higherGroupMinTotal: 42,
+      higherGroupMinAdvanced: 10,
+      nearB2MinTotal: 52,
+      nearB2MinAdvanced: 15,
+      nearB2MinLateAdvanced: 8,
+      advancedRange: [25, 61],
+      lateAdvancedRange: [44, 61]
+    };
+
+    const QUESTIONS = [
+      { n: 2, text: "Roberta __________ from The United States.", options: ["are", "is", "am", "be"], answer: "is" },
+      { n: 3, text: "What's __________ name?", options: ["0 (nothing)", "his", "him", "he"], answer: "his" },
+      { n: 4, text: "My friend __________ in London.", options: ["living", "live", "lives", "is live"], answer: "lives" },
+      { n: 5, text: "Where __________?", options: ["works Tom", "Tom works", "Tom does work", "does Tom work"], answer: "does Tom work" },
+      { n: 6, text: "I __________ coffee.", options: ["no like", "not like", "like don't", "don't like"], answer: "don't like" },
+      { n: 7, text: "A: '__________ to Australia, Ginny?' B: 'Yes, two years ago.'", options: ["Did you ever go", "Do you ever go", "Have you ever been", "Are you ever going"], answer: "Have you ever been" },
+      { n: 8, text: "Tokyo is __________ city I've ever lived in.", options: ["the most big", "the bigger", "the biggest", "the more big"], answer: "the biggest" },
+      { n: 9, text: "A vegetarian is someone __________ doesn't eat meat.", options: ["who", "what", "which", "whose"], answer: "who" },
+      { n: 10, text: "__________ these days.", options: ["I never a newspaper buy", "I never buy a newspaper", "I buy never a newspaper", "Never I buy a newspaper"], answer: "I never buy a newspaper" },
+      { n: 11, text: "I __________ watch TV tonight.", options: ["am", "go to", "going to", "am going to"], answer: "am going to" },
+      { n: 12, text: "I wish I __________ more money!", options: ["have", "had", "have had", "was having"], answer: "had" },
+      { n: 13, text: "__________ be famous one day?", options: ["Would you like", "Would you like to", "Do you like", "Do you like to"], answer: "Would you like to" },
+      { n: 14, text: "It's my birthday __________ Friday.", options: ["on", "in", "at", "for"], answer: "on" },
+      { n: 15, text: "I __________ eighteen years old.", options: ["am", "have", "have got", "0 (nothing)"], answer: "am" },
+      { n: 16, text: "I __________ a headache.", options: ["am", "do", "have", "was"], answer: "have" },
+      { n: 17, text: "Do you __________ a uniform at your school?", options: ["carry", "wear", "use", "hold"], answer: "wear" },
+      { n: 18, text: "A: 'What time is it?' B: 'I have no __________.'", options: ["idea", "opinion", "answer", "time"], answer: "idea" },
+      { n: 19, text: "The meal was very expensive. Look at the __________!", options: ["ticket", "invoice", "bill", "card"], answer: "bill" },
+      { n: 20, text: "How many __________ of trousers have you got?", options: ["items", "pairs", "sets", "times"], answer: "pairs" },
+      { n: 21, text: "Joel came back from his holiday in Brazil looking really __________.", options: ["tanned", "sunned", "coloured", "darkened"], answer: "tanned" },
+      { n: 22, text: "Harry can __________ English.", options: ["to speak", "speaking", "speak", "speaks"], answer: "speak" },
+      { n: 23, text: "I'm not interested __________ sports.", options: ["for", "about", "in", "to"], answer: "in" },
+      { n: 24, text: "She likes __________ expensive clothes.", options: ["wearing", "to wearing", "wear", "is wearing"], answer: "wearing" },
+      { n: 25, text: "Harry __________ his father's car when the accident happened.", options: ["was driving", "had driven", "driving", "has been driving"], answer: "was driving" },
+      { n: 26, text: "I was wondering __________ tell me when the next plane from Chicago arrives?", options: ["could you", "can you", "if you could", "if could you"], answer: "if you could" },
+      { n: 27, text: "If I __________ him, I would have spoken to him, wouldn't I?", options: ["saw", "had seen", "have seen", "would have seen"], answer: "had seen" },
+      { n: 28, text: "I like your hair. Where __________?", options: ["do you have cut", "have you cut it", "do you have cut it", "do you have it cut"], answer: "do you have it cut" },
+      { n: 29, text: "I think Joey must __________ late tonight. His office light is still on.", options: ["have worked", "work", "be working", "to work"], answer: "be working" },
+      { n: 30, text: "John tells me Jack's going out with Helen, _____ I find hard to believe.", options: ["which", "who", "whose", "that"], answer: "which" },
+      { n: 31, text: "What _______ this weekend, Lance?", options: ["will you doing", "are you doing", "do you do", "will you have done"], answer: "are you doing" },
+      { n: 32, text: "The weather has been awful. We've had very _______ sunshine this summer.", options: ["little", "a little", "few", "a few"], answer: "little" },
+      { n: 33, text: "Did you hear what happened to Kate? She _______.", options: ["is arrested", "arrested", "has been arrested", "is being arrested"], answer: "has been arrested" },
+      { n: 34, text: "I usually _______ up at about 7:30.", options: ["go", "be", "do", "get"], answer: "get" },
+      { n: 35, text: "I _______ football every week.", options: ["play", "go", "do", "have"], answer: "play" },
+      { n: 36, text: "My sister _________ the cooking in my house.", options: ["does", "makes", "cooks", "takes"], answer: "does" },
+      { n: 37, text: "Don't forget to ________ the lights when you leave the room.", options: ["turn up", "turn in", "turn off", "turn over"], answer: "turn off" },
+      { n: 38, text: "She was in ________ when she heard the tragic news.", options: ["crying", "tears", "cries", "tearful"], answer: "tears" },
+      { n: 39, text: "He ________ he hadn't stolen the computer, but nobody believed him.", options: ["reassured", "informed", "insisted", "persuaded"], answer: "insisted" },
+      { n: 40, text: "Could you ___________ me that book for a couple of days, please?", options: ["lend", "owe", "borrow", "rent"], answer: "lend" },
+      { n: 41, text: "Greg is _________ a lot of time at Yvonne's house these days!", options: ["taking", "spending", "having", "doing"], answer: "spending" },
+      { n: 42, text: "Who _________ in that house?", options: ["does live", "lives", "does he live", "he lives"], answer: "lives" },
+      { n: 43, text: "I'll call you when I _________ home.", options: ["get", "'ll get", "'ll have got", "'m getting"], answer: "get" },
+      { n: 44, text: "If you _________ me, what would you do?", options: ["was", "would be", "were", "have been"], answer: "were" },
+      { n: 45, text: "I don't know where _________ last night.", options: ["did he go", "he did go", "went he", "he went"], answer: "he went" },
+      { n: 46, text: "John and Betta are coming to visit us tomorrow but I wish _________.", options: ["they won't", "they hadn't", "they didn't", "they weren't"], answer: "they weren't" },
+      { n: 47, text: "I'm so hungry! If only Bill _________ all the food in the fridge!", options: ["wasn't eating", "didn't eat", "hadn't eaten", "hasn't eaten"], answer: "hadn't eaten" },
+      { n: 48, text: "I regret _________ harder in school.", options: ["not studying", "not to study", "to not study", "not have studied"], answer: "not studying" },
+      { n: 49, text: "Surely Sue _____ you if she had been unhappy with your work.", options: ["will tell", "would have told", "must have told", "had told"], answer: "would have told" },
+      { n: 50, text: "Our neighbours aren't very polite, and _____ particularly quiet!", options: ["neither they aren't", "either they aren't", "nor are they", "neither did they be"], answer: "nor are they" },
+      { n: 51, text: "We had expected that they _____ fluent English, but in fact they didn't.", options: ["were speaking", "would speak", "had spoken", "spoke"], answer: "would speak" },
+      { n: 52, text: "I'd rather I _____ next weekend, but I do!", options: ["don't have to work", "didn't have to work", "wouldn't work", "wasn't working"], answer: "didn't have to work" },
+      { n: 53, text: "Harriet is so knowledgeable. She can talk about _____ subject that comes up.", options: ["whatever", "whenever", "wherever", "whoever"], answer: "whatever" },
+      { n: 54, text: "I always _____ milk in my coffee.", options: ["have", "drink", "mix", "make"], answer: "have" },
+      { n: 55, text: "I _____ TV every evening.", options: ["watch", "look", "see at", "hear to"], answer: "watch" },
+      { n: 56, text: "Can you give me a _____ with my bag?", options: ["leg", "back", "hand", "head"], answer: "hand" },
+      { n: 57, text: "Before you enter the triathlon, please bear in _____ that you're not as young as you used to be!", options: ["thought", "question", "mind", "opinion"], answer: "mind" },
+      { n: 58, text: "The breath test showed he had consumed more than three times the legal limit of alcohol, so the police arrested him for _____.", options: ["trespassing", "mugging", "speeding", "drunk driving"], answer: "drunk driving" },
+      { n: 59, text: "The meeting was _____ and not very interesting.", options: ["time-running", "time-consuming", "time-using", "out of time"], answer: "time-consuming" },
+      { n: 60, text: "After the movie was released, the main _____ point was its excessive use of violence.", options: ["discussion", "speaking", "conversation", "talking"], answer: "talking" },
+      { n: 61, text: "There have been several big _____ against the use of GM foods recently.", options: ["campaigns", "issues", "boycotts", "strikes"], answer: "campaigns" }
+    ];
+
+    const form = document.getElementById("testForm");
+    const result = document.getElementById("result");
+    const progressText = document.getElementById("progressText");
+    const progressBar = document.getElementById("progressBar");
+    const themeIcon = document.getElementById("themeIcon");
+    let lastSubmissionKey = "";
+
+    function inRange(number, range) {
+      return number >= range[0] && number <= range[1];
+    }
+
+    function escapeHtml(text) {
+      return String(text).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+
+    function renderQuestions() {
+      form.innerHTML = "";
+      QUESTIONS.forEach((question) => {
+        const article = document.createElement("article");
+        article.className = "question";
+        article.innerHTML = `
+          <div class="question-meta">
+            <div class="question-title">${question.n}. ${escapeHtml(question.text)}</div>
+          </div>
+          <div class="answers">
+            ${question.options.map((option) => `
+              <label class="answer">
+                <input type="radio" name="q${question.n}" value="${escapeHtml(option)}" />
+                <span>${escapeHtml(option)}</span>
+              </label>
+            `).join("")}
+          </div>
+        `;
+        form.appendChild(article);
+      });
+    }
+
+    function selectedValue(questionNumber) {
+      const selected = document.querySelector(`input[name="q${questionNumber}"]:checked`);
+      return selected ? selected.value : null;
+    }
+
+    function collectAnswers() {
+      return QUESTIONS.map((question) => {
+        const selected = selectedValue(question.n) || "";
+        return {
+          number: question.n,
+          question: question.text,
+          answer: selected,
+          correct: selected === question.answer
+        };
+      });
+    }
+
+    function updateProgress() {
+      const answered = QUESTIONS.filter((question) => selectedValue(question.n)).length;
+      const percent = Math.round((answered / CONFIG.maxScore) * 100);
+      progressText.textContent = `${answered} / ${CONFIG.maxScore}`;
+      progressBar.style.width = `${percent}%`;
+    }
+
+    function evaluateTest(options = {}) {
+      let total = 0;
+      let advanced = 0;
+      let lateAdvanced = 0;
+      let answered = 0;
+      const wrong = [];
+      const missing = [];
+      const answers = collectAnswers();
+
+      answers.forEach((item) => {
+        const question = QUESTIONS.find((entry) => entry.n === item.number);
+        const selected = item.answer;
+        if (!selected) {
+          missing.push(item.number);
+          return;
+        }
+        answered += 1;
+        if (item.correct) {
+          total += 1;
+          if (inRange(item.number, CONFIG.advancedRange)) advanced += 1;
+          if (inRange(item.number, CONFIG.lateAdvancedRange)) lateAdvanced += 1;
+        } else {
+          wrong.push(item.number);
+        }
+      });
+
+      const percent = Math.round((total / CONFIG.maxScore) * 100);
+      const answeredPercent = Math.round((answered / CONFIG.maxScore) * 100);
+      const advancedTotal = QUESTIONS.filter((question) => inRange(question.n, CONFIG.advancedRange)).length;
+      const lateAdvancedTotal = QUESTIONS.filter((question) => inRange(question.n, CONFIG.lateAdvancedRange)).length;
+      const advancedPercent = Math.round((advanced / advancedTotal) * 100);
+      const lateAdvancedPercent = Math.round((lateAdvanced / lateAdvancedTotal) * 100);
+      const higherGroup = total >= CONFIG.higherGroupMinTotal && advanced >= CONFIG.higherGroupMinAdvanced;
+      const nearB2 = total >= CONFIG.nearB2MinTotal && advanced >= CONFIG.nearB2MinAdvanced && lateAdvanced >= CONFIG.nearB2MinLateAdvanced;
+
+      let levelLabel = "Základní úroveň";
+      let resultClass = "bad";
+      let recommendation = "Student má pravděpodobně výrazné mezery v základní gramatice a slovní zásobě.";
+
+      if (nearB2) {
+        levelLabel = "B1+ / blížící se B2";
+        resultClass = "ok";
+        recommendation = "Student splnil celkové skóre i obě pokročilá kritéria. Výsledek ukazuje silnou gramaticko-lexikální kompetenci, pro potvrzení B2 je vhodné doplnit writing a speaking.";
+      } else if (higherGroup) {
+        levelLabel = "Vyšší skupina";
+        resultClass = "warn";
+        recommendation = "Student splnil kritéria pro zařazení do vyšší skupiny, ale nesplnil přísnější kritéria pro interpretaci B1+/B2.";
+      } else if (total >= 26) {
+        levelLabel = "Nižší až střední úroveň";
+        recommendation = "Student pravděpodobně patří spíše do nižší skupiny. Výsledek zatím nestačí pro spolehlivou indikaci B1+/B2.";
+      }
+
+      const studentName = document.getElementById("studentName").value.trim() || "neuvedeno";
+      const submittedAt = new Date().toISOString();
+      result.className = `result ${resultClass}`;
+      result.style.display = "block";
+      result.style.setProperty("--score-angle", `${percent * 3.6}deg`);
+      result.innerHTML = `
+        <div class="result-head">
+          <div>
+            <h2>Výsledek: ${escapeHtml(levelLabel)}</h2>
+            <p class="small"><strong>Student:</strong> ${escapeHtml(studentName)} | <strong>Datum:</strong> ${new Date().toLocaleDateString("cs-CZ")}</p>
+          </div>
+          <div class="score-ring" aria-label="Úspěšnost ${percent} procent"><div>${percent}%</div></div>
+        </div>
+        <div class="score-grid">
+          <div class="scorebox"><strong>Celkové skóre</strong>${total} / ${CONFIG.maxScore}</div>
+          <div class="scorebox"><strong>Úspěšnost</strong>${percent}%</div>
+          <div class="scorebox"><strong>Pokročilá část</strong>${advanced} / ${advancedTotal} (${advancedPercent}%)</div>
+          <div class="scorebox"><strong>Pokročilé jádro</strong>${lateAdvanced} / ${lateAdvancedTotal} (${lateAdvancedPercent}%)</div>
+        </div>
+        <p>${recommendation}</p>
+        <h3>Splnění kritérií</h3>
+        <ul>
+          <li>Vyšší skupina: <strong>${higherGroup ? "splněno" : "nesplněno"}</strong>. Požadavek je ${CONFIG.higherGroupMinTotal}+ bodů celkem a ${CONFIG.higherGroupMinAdvanced}+ správně v otázkách 25-61.</li>
+          <li>B1+ / blížící se B2: <strong>${nearB2 ? "splněno" : "nesplněno"}</strong>. Požadavek je ${CONFIG.nearB2MinTotal}+ bodů celkem, ${CONFIG.nearB2MinAdvanced}+ správně v otázkách 25-61 a ${CONFIG.nearB2MinLateAdvanced}+ správně v otázkách 44-61.</li>
+        </ul>
+        <p class="small">Zodpovězeno: ${answered} / ${CONFIG.maxScore} (${answeredPercent}%).</p>
+        <p class="small" id="submitStatus">Odeslání odpovědí: ${CONFIG.submitUrl ? "připravuji..." : "není nastaveno"}</p>
+        ${missing.length ? `<p class="missing">Nezodpovězené otázky: ${missing.join(", ")}</p>` : ""}
+        ${wrong.length ? `<p class="small">Chybně zodpovězené otázky: ${wrong.join(", ")}</p>` : ""}
+      `;
+
+      submitResult({
+        submittedAt,
+        studentName,
+        total,
+        percent,
+        answered,
+        answeredPercent,
+        advanced,
+        advancedTotal,
+        advancedPercent,
+        lateAdvanced,
+        lateAdvancedTotal,
+        lateAdvancedPercent,
+        higherGroup,
+        nearB2,
+        levelLabel,
+        missing,
+        wrong,
+        answers
+      });
+
+      if (options.scroll !== false) {
+        result.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    async function submitResult(payload) {
+      const status = document.getElementById("submitStatus");
+      if (!CONFIG.submitUrl) {
+        if (status) status.textContent = "Odeslání odpovědí: není nastaveno. Vložte adresu Google Apps Script do CONFIG.submitUrl.";
+        return;
+      }
+
+      const submissionKey = JSON.stringify({
+        studentName: payload.studentName,
+        answers: payload.answers.map((answer) => answer.answer),
+        total: payload.total
+      });
+
+      if (submissionKey === lastSubmissionKey) {
+        if (status) status.textContent = "Odeslání odpovědí: tento výsledek už byl odeslán.";
+        return;
+      }
+
+      try {
+        if (status) status.textContent = "Odeslání odpovědí: odesílám...";
+        await fetch(CONFIG.submitUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        lastSubmissionKey = submissionKey;
+        if (status) status.textContent = "Odeslání odpovědí: odesláno.";
+      } catch (error) {
+        if (status) status.textContent = "Odeslání odpovědí se nepodařilo. Zkontrolujte připojení a adresu v CONFIG.submitUrl.";
+      }
+    }
+
+    function resetTest() {
+      form.reset();
+      document.getElementById("studentName").value = "";
+      result.style.display = "none";
+      result.innerHTML = "";
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function exportPdf() {
+      if (result.style.display !== "block") {
+        evaluateTest({ scroll: false });
+      }
+      setTimeout(() => window.print(), 80);
+    }
+
+    function setTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      themeIcon.textContent = theme === "dark" ? "☀" : "☾";
+      localStorage.setItem("placement-theme", theme);
+    }
+
+    document.getElementById("evaluateButton").addEventListener("click", () => evaluateTest());
+    document.getElementById("resetButton").addEventListener("click", resetTest);
+    document.getElementById("pdfButton").addEventListener("click", exportPdf);
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+    });
+    form.addEventListener("change", updateProgress);
+
+    renderQuestions();
+    setTheme(localStorage.getItem("placement-theme") || "light");
+    updateProgress();
+  </script>
+</body>
+</html>
